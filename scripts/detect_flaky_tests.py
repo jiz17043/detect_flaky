@@ -3,17 +3,19 @@ from collections import defaultdict
 from lxml import etree
 
 result_dir = "all-results"
-test_outcomes = defaultdict(set)  # test_name -> set of outcomes
+test_outcomes = defaultdict(set)
 
-for file in os.listdir(result_dir):
-    if file.endswith(".xml"):
-        tree = etree.parse(os.path.join(result_dir, file))
-        for testcase in tree.xpath("//testcase"):
-            name = testcase.get("classname") + "::" + testcase.get("name")
-            if testcase.xpath("failure") or testcase.xpath("error"):
-                test_outcomes[name].add("fail")
-            else:
-                test_outcomes[name].add("pass")
+for root, _, files in os.walk(result_dir):
+    for file in files:
+        if file.endswith(".xml"):
+            path = os.path.join(root, file)
+            tree = etree.parse(path)
+            for testcase in tree.xpath("//testcase"):
+                name = testcase.get("classname") + "::" + testcase.get("name")
+                if testcase.xpath("failure") or testcase.xpath("error"):
+                    test_outcomes[name].add("fail")
+                else:
+                    test_outcomes[name].add("pass")
 
 flaky_tests = [name for name, outcomes in test_outcomes.items() if len(outcomes) > 1]
 
