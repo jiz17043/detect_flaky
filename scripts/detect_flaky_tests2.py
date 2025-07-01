@@ -1,6 +1,7 @@
 import os
 from collections import defaultdict
 from lxml import etree
+import json
 
 result_dir = "test-results"
 test_outcomes = defaultdict(set)
@@ -17,6 +18,7 @@ for root, _, files in os.walk(result_dir):
                 else:
                     test_outcomes[name].add("pass")
 
+
 flaky_tests = [name for name, outcomes in test_outcomes.items() if len(outcomes) > 1]
 
 if flaky_tests:
@@ -27,7 +29,11 @@ if flaky_tests:
         f.write("## 🌀 Flaky Tests Detected\n")
         for t in flaky_tests:
             f.write(f"- {t}\n")
+    # Write flaky tests to a JSON file
+    with open("flaky_test.json", "w") as json_file:
+        json.dump({"flaky_tests": flaky_tests}, json_file, indent=2)
 else:
     print("No flaky tests detected.")
     with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as f:
         f.write("✅ No flaky tests detected.\n")
+
